@@ -1,5 +1,4 @@
 import React, { Component } from "react";
-import Burger from "../../components/Burger/Burger";
 import CheckoutSummary from "../../components/Order/CheckoutSummary/CheckoutSummary";
 import { Route } from "react-router-dom";
 import ContactData from "../../containers/Checkout/ContactData/ContactData";
