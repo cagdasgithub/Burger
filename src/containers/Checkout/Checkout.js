@@ -1,31 +1,13 @@
 import React, { Component } from "react";
+import { connect } from "react-redux";
 import CheckoutSummary from "../../components/Order/CheckoutSummary/CheckoutSummary";
-import { Route } from "react-router-dom";
+import { Route, Redirect } from "react-router-dom";
 import ContactData from "../../containers/Checkout/ContactData/ContactData";
 import axios from "axios";
 import WithErrorHandler from "../../hocs/WithErrorHandler/WithErrorHandler";
+import * as actions from "../../store/actions/index";
 
 class Checkout extends Component {
-  state = {
-    ingredients: null,
-    price: 0
-  };
-  componentWillMount() {
-    const query = new URLSearchParams(this.props.location.search);
-    const ingredients = {};
-    let price = 0;
-
-    for (let param of query.entries()) {
-      if (param[0] === "price") {
-        price = param[1];
-      } else {
-        ingredients[param[0]] = +param[1];
-      }
-    }
-
-    this.setState({ ingredients: ingredients, price: price });
-  }
-
   checkoutConfirmedHandler = () => {
     this.props.history.replace("/checkout/contact-data");
   };
@@ -35,25 +17,36 @@ class Checkout extends Component {
   };
 
   render() {
-    return (
-      <div>
-        <CheckoutSummary
-          ingredients={this.state.ingredients}
-          checkoutConfirmed={this.checkoutConfirmedHandler}
-          checkoutCancelled={this.checkoutCancelHandler}
-        />
-        <Route
-          path="/checkout/contact-data"
-          render={() => (
-            <ContactData
-              ingredients={this.state.ingredients}
-              price={this.state.price}
-            />
-          )}
-        />
-      </div>
-    );
+    let summary = <Redirect to="/" />;
+
+    if (this.props.ings) {
+      const purchasedRedirect = this.props.purchased ? (
+        <Redirect to="/" />
+      ) : null;
+      summary = (
+        <div>
+          {purchasedRedirect}
+          <CheckoutSummary
+            ingredients={this.props.ings}
+            checkoutConfirmed={this.checkoutConfirmedHandler}
+            checkoutCancelled={this.checkoutCancelHandler}
+          />
+          <Route
+            path={this.props.match.path + "/contact-data"}
+            component={ContactData}
+          />
+        </div>
+      );
+    }
+    return <div>{summary}</div>;
   }
 }
 
-export default WithErrorHandler(Checkout, axios);
+const mapStateToProps = state => {
+  return {
+    ings: state.burgerBuilder.ingredients,
+    purchased: state.order.purchased
+  };
+};
+
+export default connect(mapStateToProps)(WithErrorHandler(Checkout, axios));
